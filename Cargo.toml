@@ -1,0 +1,9 @@
+[package]
+
+name = "pam"
+version = "0.0.1"
+authors = [ "Jesse Hallett <jesse@galois.com" ]
+
+[lib]
+
+name = "pam"
