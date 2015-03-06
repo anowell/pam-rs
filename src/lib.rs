@@ -19,9 +19,9 @@
 //! `pam_sm_authenticate()`, which will use functions in this library to
 //! interrogate the program that requested authentication for more information,
 //! and to render a result.  For a working example that uses this library, see
-//! [tozny-pam][].
+//! [toznyauth-pam][].
 //!
-//! [tozny-pam]: https://github.com/tozny/tozny-pam
+//! [toznyauth-pam]: https://github.com/tozny/toznyauth-pam
 //!
 //! Note that constants that are normally read from pam header files are
 //! hard-coded in the `constants` module.  The values there are taken from
