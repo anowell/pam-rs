@@ -3,6 +3,7 @@
 use libc::{c_char};
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
+use std::marker::{PhantomData};
 
 use constants;
 use constants::*;
@@ -66,10 +67,7 @@ pub trait PamItem {
     /// API contract specifies that when the API function `pam_get_item` is
     /// called with the constant PAM_CONV, it will return a value of type
     /// `PamConv`.
-    ///
-    /// The argument will always be `None`.  Its purpose is to provide a type
-    /// label - the value is not important.
-    fn item_type(_: Option<Self>) -> PamItemType;
+    fn item_type(_: PhantomData<Self>) -> PamItemType;
 }
 
 /// Gets some value, identified by `key`, that has been set by the module
@@ -121,7 +119,7 @@ pub extern fn cleanup<T>(_: *const PamHandleT, c_data: Box<PamDataT>, _: PamResu
 pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
     let mut ptr: *const PamItemT = ptr::null();
     let (res, item) = unsafe {
-        let r = pam_get_item(pamh, PamItem::item_type(None::<T>), &mut ptr);
+        let r = pam_get_item(pamh, PamItem::item_type(PhantomData::<T>), &mut ptr);
         let typed_ptr: *const T = mem::transmute(ptr);
         let t: &T = &*typed_ptr;
         (r, t)

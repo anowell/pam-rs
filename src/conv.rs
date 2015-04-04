@@ -1,6 +1,7 @@
 use libc::{c_char, c_int};
 use std::{ptr};
 use std::ffi::{CStr, CString};
+use std::marker::{PhantomData};
 
 use constants;
 use constants::*;
@@ -76,5 +77,5 @@ impl PamConv {
 }
 
 impl PamItem for PamConv {
-    fn item_type(_: Option<Self>) -> PamItemType { PAM_CONV }
+    fn item_type(_: PhantomData<Self>) -> PamItemType { PAM_CONV }
 }
