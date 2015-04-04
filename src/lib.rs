@@ -1,7 +1,3 @@
-#![feature(core)]
-#![feature(libc)]
-#![feature(std_misc)]
-
 //! Interface to the pluggable authentication module framework (PAM).
 //!
 //! The goal of this library is to provide a type-safe API that can be used to

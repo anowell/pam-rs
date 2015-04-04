@@ -12,5 +12,7 @@ keywords = ["pam", "ffi", "linux", "authentication"]
 license = "MIT"
 
 [lib]
-
 name = "pam"
+
+[dependencies]
+libc = "~0.1.5"

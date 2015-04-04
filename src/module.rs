@@ -25,7 +25,7 @@ pub enum PamDataT {}
 extern {
     fn pam_get_data(pamh: *const PamHandleT,
                     module_data_name: *const c_char,
-                    data: & *mut PamDataT,
+                    data: &mut *const PamDataT,
                     ) -> PamResultCode;
 
     fn pam_set_data(pamh: *const PamHandleT,
@@ -39,7 +39,7 @@ extern {
 
     fn pam_get_item(pamh: *const PamHandleT,
                     item_type: PamItemType,
-                    item: & *mut PamItemT,
+                    item: &mut *const PamItemT,
                     ) -> PamResultCode;
 
     fn pam_set_item(pamh: *mut PamHandleT,
@@ -79,11 +79,11 @@ pub trait PamItem {
 /// http://www.linux-pam.org/Linux-PAM-html/mwg-expected-by-module-item.html
 pub unsafe fn get_data<'a, T>(pamh: &'a PamHandleT, key: &str) -> PamResult<&'a T> {
     let c_key = CString::new(key).unwrap().as_ptr();
-    let mut ptr: *mut PamDataT = ptr::null_mut();
+    let mut ptr: *const PamDataT = ptr::null();
     let res = pam_get_data(pamh, c_key, &mut ptr);
     if constants::PAM_SUCCESS == res && !ptr.is_null() {
-        let raw_data: &PamDataT = ptr.as_ref().unwrap();
-        let data: &T = mem::transmute(raw_data);
+        let typed_ptr: *const T = mem::transmute(ptr);
+        let data: &T = &*typed_ptr;
         Ok(data)
     }
     else {
@@ -119,11 +119,11 @@ pub extern fn cleanup<T>(_: *const PamHandleT, c_data: Box<PamDataT>, _: PamResu
 /// See `pam_get_item` in
 /// http://www.linux-pam.org/Linux-PAM-html/mwg-expected-by-module-item.html
 pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
-    let ptr: *mut PamItemT = ptr::null_mut();
+    let mut ptr: *const PamItemT = ptr::null();
     let (res, item) = unsafe {
-        let r = pam_get_item(pamh, PamItem::item_type(None::<T>), &ptr);
-        let raw_item: &PamItemT = ptr.as_ref().unwrap();
-        let t: &T = mem::transmute(raw_item);
+        let r = pam_get_item(pamh, PamItem::item_type(None::<T>), &mut ptr);
+        let typed_ptr: *const T = mem::transmute(ptr);
+        let t: &T = &*typed_ptr;
         (r, t)
     };
     if constants::PAM_SUCCESS == res { Ok(item) } else { Err(res) }
