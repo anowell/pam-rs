@@ -1,9 +1,9 @@
 //! Functions for use in pam modules.
 
-use libc::{c_char};
+use libc::c_char;
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
-use std::marker::{PhantomData};
+use std::marker::PhantomData;
 
 use constants;
 use constants::*;
@@ -23,35 +23,34 @@ enum PamItemT {}
 pub enum PamDataT {}
 
 #[link(name = "pam")]
-extern {
+extern "C" {
     fn pam_get_data(pamh: *const PamHandleT,
                     module_data_name: *const c_char,
-                    data: &mut *const PamDataT,
-                    ) -> PamResultCode;
+                    data: &mut *const PamDataT)
+                    -> PamResultCode;
 
     fn pam_set_data(pamh: *const PamHandleT,
                     module_data_name: *const c_char,
                     data: Box<PamDataT>,
-                    cleanup: extern fn (pamh: *const PamHandleT,
-                                        data: Box<PamDataT>,
-                                        error_status: PamResultCode
-                                        ),
-                    ) -> PamResultCode;
+                    cleanup: extern "C" fn(pamh: *const PamHandleT,
+                                           data: Box<PamDataT>,
+                                           error_status: PamResultCode))
+                    -> PamResultCode;
 
     fn pam_get_item(pamh: *const PamHandleT,
                     item_type: PamItemType,
-                    item: &mut *const PamItemT,
-                    ) -> PamResultCode;
+                    item: &mut *const PamItemT)
+                    -> PamResultCode;
 
     fn pam_set_item(pamh: *mut PamHandleT,
                     item_type: PamItemType,
-                    item: &PamItemT,
-                    ) -> PamResultCode;
+                    item: &PamItemT)
+                    -> PamResultCode;
 
     fn pam_get_user(pamh: *const PamHandleT,
-                    user: & *mut c_char,
-                    prompt: *const c_char,
-                    ) -> PamResultCode;
+                    user: &*mut c_char,
+                    prompt: *const c_char)
+                    -> PamResultCode;
 }
 
 pub type PamResult<T> = Result<T, PamResultCode>;
@@ -83,8 +82,7 @@ pub unsafe fn get_data<'a, T>(pamh: &'a PamHandleT, key: &str) -> PamResult<&'a 
         let typed_ptr: *const T = mem::transmute(ptr);
         let data: &T = &*typed_ptr;
         Ok(data)
-    }
-    else {
+    } else {
         Err(res)
     }
 }
@@ -100,11 +98,15 @@ pub fn set_data<T>(pamh: &PamHandleT, key: &str, data: Box<T>) -> PamResult<()> 
         let c_data: Box<PamDataT> = mem::transmute(data);
         pam_set_data(pamh, c_key, c_data, cleanup::<T>)
     };
-    if constants::PAM_SUCCESS == res { Ok(()) } else { Err(res) }
+    if constants::PAM_SUCCESS == res {
+        Ok(())
+    } else {
+        Err(res)
+    }
 }
 
 #[no_mangle]
-pub extern fn cleanup<T>(_: *const PamHandleT, c_data: Box<PamDataT>, _: PamResultCode) {
+pub extern "C" fn cleanup<T>(_: *const PamHandleT, c_data: Box<PamDataT>, _: PamResultCode) {
     unsafe {
         let data: Box<T> = mem::transmute(c_data);
         mem::drop(data);
@@ -124,7 +126,11 @@ pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
         let t: &T = &*typed_ptr;
         (r, t)
     };
-    if constants::PAM_SUCCESS == res { Ok(item) } else { Err(res) }
+    if constants::PAM_SUCCESS == res {
+        Ok(item)
+    } else {
+        Err(res)
+    }
 }
 
 /// Retrieves the name of the user who is authenticating or logging in.
@@ -137,16 +143,14 @@ pub fn get_user<'a>(pamh: &'a PamHandleT, prompt: Option<&str>) -> PamResult<Str
     let ptr: *mut c_char = ptr::null_mut();
     let c_prompt = match prompt {
         Some(p) => CString::new(p).unwrap().as_ptr(),
-        None    => ptr::null(),
+        None => ptr::null(),
     };
     let res = unsafe { pam_get_user(pamh, &ptr, c_prompt) };
     if constants::PAM_SUCCESS == res && !ptr.is_null() {
         let const_ptr = ptr as *const c_char;
         let bytes = unsafe { CStr::from_ptr(const_ptr).to_bytes() };
-        String::from_utf8(bytes.to_vec())
-            .map_err(|_| PAM_CONV_ERR)
-    }
-    else {
+        String::from_utf8(bytes.to_vec()).map_err(|_| PAM_CONV_ERR)
+    } else {
         Err(res)
     }
 }

@@ -1,7 +1,7 @@
 use libc::{c_char, c_int};
-use std::{ptr};
+use std::ptr;
 use std::ffi::{CStr, CString};
-use std::marker::{PhantomData};
+use std::marker::PhantomData;
 
 use constants;
 use constants::*;
@@ -13,7 +13,7 @@ pub enum AppDataPtr {}
 #[repr(C)]
 struct PamMessage {
     msg_style: PamMessageStyle,
-    msg:       *const c_char,
+    msg: *const c_char,
 }
 
 #[repr(C)]
@@ -29,11 +29,11 @@ struct PamResponse {
 /// will be relayed back.
 #[repr(C)]
 pub struct PamConv {
-    conv: extern fn(num_msg: c_int,
-                    pam_message: &&PamMessage,
-                    pam_response: &mut *const PamResponse,
-                    appdata_ptr: *const AppDataPtr
-                   ) -> PamResultCode,
+    conv: extern "C" fn(num_msg: c_int,
+                        pam_message: &&PamMessage,
+                        pam_response: &mut *const PamResponse,
+                        appdata_ptr: *const AppDataPtr)
+                        -> PamResultCode,
     appdata_ptr: *const AppDataPtr,
 }
 
@@ -65,8 +65,7 @@ impl PamConv {
         if constants::PAM_SUCCESS == ret {
             if resp_ptr.is_null() {
                 Ok(None)
-            }
-            else {
+            } else {
                 let bytes = unsafe { CStr::from_ptr((*resp_ptr).resp).to_bytes() };
                 Ok(String::from_utf8(bytes.to_vec()).ok())
             }
@@ -77,5 +76,7 @@ impl PamConv {
 }
 
 impl PamItem for PamConv {
-    fn item_type(_: PhantomData<Self>) -> PamItemType { PAM_CONV }
+    fn item_type(_: PhantomData<Self>) -> PamItemType {
+        PAM_CONV
+    }
 }
