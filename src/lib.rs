@@ -28,4 +28,5 @@ extern crate libc;
 
 pub mod conv;
 pub mod constants;
+pub mod items;
 pub mod module;
