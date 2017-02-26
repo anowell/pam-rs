@@ -20,27 +20,41 @@ pub const PAM_CHANGE_EXPIRED_AUTHTOK: PamFlag = 0x0020;
 
 // The Linux-PAM item types
 // see /usr/include/security/_pam_types.h
-pub const PAM_SERVICE: PamItemType = 1; /* The service name */
-pub const PAM_USER: PamItemType = 2; /* The user name */
-pub const PAM_TTY: PamItemType = 3; /* The tty name */
-pub const PAM_RHOST: PamItemType = 4; /* The remote host name */
-pub const PAM_CONV: PamItemType = 5; /* The pam_conv structure */
-pub const PAM_AUTHTOK: PamItemType = 6; /* The authentication token (password) */
-pub const PAM_OLDAUTHTOK: PamItemType = 7; /* The old authentication token */
-pub const PAM_RUSER: PamItemType = 8; /* The remote user name */
-pub const PAM_USER_PROMPT: PamItemType = 9; /* the prompt for getting a username */
+/// The service name
+pub const PAM_SERVICE: PamItemType = 1;
+/// The user name
+pub const PAM_USER: PamItemType = 2;
+/// The tty name
+pub const PAM_TTY: PamItemType = 3;
+/// The remote host name
+pub const PAM_RHOST: PamItemType = 4;
+/// The pam_conv structure
+pub const PAM_CONV: PamItemType = 5;
+/// The authentication token (password)
+pub const PAM_AUTHTOK: PamItemType = 6;
+/// The old authentication token
+pub const PAM_OLDAUTHTOK: PamItemType = 7;
+/// The remote user name
+pub const PAM_RUSER: PamItemType = 8;
+/// the prompt for getting a username
+pub const PAM_USER_PROMPT: PamItemType = 9;
 /* Linux-PAM :extensionsPamItemType = */
-pub const PAM_FAIL_DELAY: PamItemType = 10; /* app supplied function to override failure delays */
-pub const PAM_XDISPLAY: PamItemType = 11; /* X :display name */
-pub const PAM_XAUTHDATA: PamItemType = 12; /* X :server authentication data */
-pub const PAM_AUTHTOK_TYPE: PamItemType = 13; /* The type for pam_get_authtok */
+/// app supplied function to override failure delays
+pub const PAM_FAIL_DELAY: PamItemType = 10;
+/// X :display name
+pub const PAM_XDISPLAY: PamItemType = 11;
+/// X :server authentication data
+pub const PAM_XAUTHDATA: PamItemType = 12;
+/// The type for pam_get_authtok
+pub const PAM_AUTHTOK_TYPE: PamItemType = 13;
 
 // Message styles
 pub const PAM_PROMPT_ECHO_OFF: PamMessageStyle = 1;
 pub const PAM_PROMPT_ECHO_ON: PamMessageStyle = 2;
 pub const PAM_ERROR_MSG: PamMessageStyle = 3;
 pub const PAM_TEXT_INFO: PamMessageStyle = 4;
-pub const PAM_RADIO_TYPE: PamMessageStyle = 5; /* yes/no/maybe conditionals */
+/// yes/no/maybe conditionals
+pub const PAM_RADIO_TYPE: PamMessageStyle = 5;
 pub const PAM_BINARY_PROMPT: PamMessageStyle = 7;
 
 // The Linux-PAM return values
