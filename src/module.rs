@@ -3,7 +3,6 @@
 use libc::c_char;
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
-use std::marker::PhantomData;
 
 use constants;
 use constants::*;
@@ -66,7 +65,7 @@ pub trait PamItem {
     /// API contract specifies that when the API function `pam_get_item` is
     /// called with the constant PAM_CONV, it will return a value of type
     /// `PamConv`.
-    fn item_type(_: PhantomData<Self>) -> PamItemType;
+    fn item_type() -> PamItemType;
 }
 
 /// Gets some value, identified by `key`, that has been set by the module
@@ -121,7 +120,7 @@ pub extern "C" fn cleanup<T>(_: *const PamHandleT, c_data: Box<PamDataT>, _: Pam
 pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
     let mut ptr: *const PamItemT = ptr::null();
     let (res, item) = unsafe {
-        let r = pam_get_item(pamh, PamItem::item_type(PhantomData::<T>), &mut ptr);
+        let r = pam_get_item(pamh, T::item_type(), &mut ptr);
         let typed_ptr: *const T = mem::transmute(ptr);
         let t: &T = &*typed_ptr;
         (r, t)
@@ -145,7 +144,7 @@ pub fn set_item_str<'a, P: PamItem>(pamh: &'a mut PamHandleT, item: &str) -> Pam
 
     let res = unsafe {
         pam_set_item(pamh,
-                     PamItem::item_type(PhantomData::<P>),
+                     P::item_type(),
 
                      // unwrapping is okay here, as c_item will not be a NULL
                      // pointer

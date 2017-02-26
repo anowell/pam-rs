@@ -1,4 +1,3 @@
-use std::marker::PhantomData;
 use constants::{PamItemType, PAM_SERVICE, PAM_USER, PAM_USER_PROMPT, PAM_TTY, PAM_RUSER, PAM_RHOST,
                 PAM_AUTHTOK, PAM_OLDAUTHTOK};
 use module::PamItem;
@@ -8,7 +7,7 @@ pub use conv::PamConv;
 pub struct PamService {}
 
 impl PamItem for PamService {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_SERVICE
     }
 }
@@ -16,7 +15,7 @@ impl PamItem for PamService {
 pub struct PamUser {}
 
 impl PamItem for PamUser {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_USER
     }
 }
@@ -24,7 +23,7 @@ impl PamItem for PamUser {
 pub struct PamUserPrompt {}
 
 impl PamItem for PamUserPrompt {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_USER_PROMPT
     }
 }
@@ -32,7 +31,7 @@ impl PamItem for PamUserPrompt {
 pub struct PamTty {}
 
 impl PamItem for PamTty {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_TTY
     }
 }
@@ -40,7 +39,7 @@ impl PamItem for PamTty {
 pub struct PamRUser {}
 
 impl PamItem for PamRUser {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_RUSER
     }
 }
@@ -48,7 +47,7 @@ impl PamItem for PamRUser {
 pub struct PamRHost {}
 
 impl PamItem for PamRHost {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_RHOST
     }
 }
@@ -56,7 +55,7 @@ impl PamItem for PamRHost {
 pub struct PamAuthTok {}
 
 impl PamItem for PamAuthTok {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_AUTHTOK
     }
 }
@@ -64,7 +63,7 @@ impl PamItem for PamAuthTok {
 pub struct PamOldAuthTok {}
 
 impl PamItem for PamOldAuthTok {
-    fn item_type(_: PhantomData<Self>) -> PamItemType {
+    fn item_type() -> PamItemType {
         PAM_OLDAUTHTOK
     }
 }
