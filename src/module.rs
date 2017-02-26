@@ -133,6 +133,31 @@ pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
     }
 }
 
+/// Sets a value in the pam context. The value can be retrieved using
+/// `get_item`.
+///
+/// Note that all items are strings, except `PAM_CONV` and `PAM_FAIL_DELAY`.
+///
+/// See `pam_set_item` in
+/// http://www.linux-pam.org/Linux-PAM-html/mwg-expected-by-module-item.html
+pub fn set_item_str<'a, P: PamItem>(pamh: &'a mut PamHandleT, item: &str) -> PamResult<()> {
+    let c_item = CString::new(item).unwrap().as_ptr();
+
+    let res = unsafe {
+        pam_set_item(pamh,
+                     PamItem::item_type(PhantomData::<P>),
+
+                     // unwrapping is okay here, as c_item will not be a NULL
+                     // pointer
+                     (c_item as *const PamItemT).as_ref().unwrap())
+    };
+    if constants::PAM_SUCCESS == res {
+        Ok(())
+    } else {
+        Err(res)
+    }
+}
+
 /// Retrieves the name of the user who is authenticating or logging in.
 ///
 /// This is really a specialization of `get_item`.
