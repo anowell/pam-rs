@@ -4,8 +4,7 @@ use libc::c_char;
 use std::{mem, ptr};
 use std::ffi::{CStr, CString};
 
-use constants;
-use constants::*;
+use constants::{PamResultCode, PamItemType};
 
 /// Opaque type, used as a pointer when making pam API calls.
 ///
@@ -77,7 +76,7 @@ pub unsafe fn get_data<'a, T>(pamh: &'a PamHandleT, key: &str) -> PamResult<&'a 
     let c_key = CString::new(key).unwrap().as_ptr();
     let mut ptr: *const PamDataT = ptr::null();
     let res = pam_get_data(pamh, c_key, &mut ptr);
-    if constants::PAM_SUCCESS == res && !ptr.is_null() {
+    if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {
         let typed_ptr: *const T = mem::transmute(ptr);
         let data: &T = &*typed_ptr;
         Ok(data)
@@ -97,7 +96,7 @@ pub fn set_data<T>(pamh: &PamHandleT, key: &str, data: Box<T>) -> PamResult<()> 
         let c_data: Box<PamDataT> = mem::transmute(data);
         pam_set_data(pamh, c_key, c_data, cleanup::<T>)
     };
-    if constants::PAM_SUCCESS == res {
+    if PamResultCode::PAM_SUCCESS == res {
         Ok(())
     } else {
         Err(res)
@@ -125,7 +124,7 @@ pub fn get_item<'a, T: PamItem>(pamh: &'a PamHandleT) -> PamResult<&'a T> {
         let t: &T = &*typed_ptr;
         (r, t)
     };
-    if constants::PAM_SUCCESS == res {
+    if PamResultCode::PAM_SUCCESS == res {
         Ok(item)
     } else {
         Err(res)
@@ -150,7 +149,7 @@ pub fn set_item_str<'a, T: PamItem>(pamh: &'a mut PamHandleT, item: &str) -> Pam
                      // pointer
                      (c_item as *const PamItemT).as_ref().unwrap())
     };
-    if constants::PAM_SUCCESS == res {
+    if PamResultCode::PAM_SUCCESS == res {
         Ok(())
     } else {
         Err(res)
@@ -170,10 +169,10 @@ pub fn get_user<'a>(pamh: &'a PamHandleT, prompt: Option<&str>) -> PamResult<Str
         None => ptr::null(),
     };
     let res = unsafe { pam_get_user(pamh, &ptr, c_prompt) };
-    if constants::PAM_SUCCESS == res && !ptr.is_null() {
+    if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {
         let const_ptr = ptr as *const c_char;
         let bytes = unsafe { CStr::from_ptr(const_ptr).to_bytes() };
-        String::from_utf8(bytes.to_vec()).map_err(|_| PAM_CONV_ERR)
+        String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)
     } else {
         Err(res)
     }

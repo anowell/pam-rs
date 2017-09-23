@@ -2,7 +2,7 @@ use libc::{c_char, c_int};
 use std::ptr;
 use std::ffi::{CStr, CString};
 
-use constants;
+use constants::PamResultCode;
 use constants::*;
 use module::{PamItem, PamResult};
 
@@ -61,7 +61,7 @@ impl PamConv {
 
         let ret = (self.conv)(1, &&msg, &mut resp_ptr, self.appdata_ptr);
 
-        if constants::PAM_SUCCESS == ret {
+        if PamResultCode::PAM_SUCCESS == ret {
             if resp_ptr.is_null() {
                 Ok(None)
             } else {
