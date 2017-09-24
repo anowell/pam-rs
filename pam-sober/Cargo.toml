@@ -1,0 +1,12 @@
+[package]
+name = "pam-sober"
+version = "0.1.0"
+authors = ["Anthony Nowell <anowell@gmail.com>"]
+
+[lib]
+name = "pam_sober"
+crate-type = ["cdylib"]
+
+[dependencies]
+pam = { path = "../pam/" }
+rand = "0.3.16"
