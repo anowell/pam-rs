@@ -1,0 +1,12 @@
+[package]
+name = "pam-http"
+version = "0.1.0"
+authors = ["Anthony Nowell <anowell@gmail.com>"]
+
+[lib]
+name = "pam_http"
+crate-type = ["cdylib"]
+
+[dependencies]
+pam = { path = "../pam/" }
+reqwest = "0.7"
