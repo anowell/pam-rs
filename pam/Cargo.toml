@@ -2,11 +2,9 @@
 
 name = "pam"
 description = "PAM bindings for Rust"
-version = "0.0.2"
-authors = [ "Jesse Hallett <jesse@galois.com>" ]
-documentation = "https://tozny.github.io/rust-pam/pam/"
-homepage = "https://github.com/tozny/rust-pam"
-repository = "https://github.com/tozny/rust-pam.git"
+version = "0.1.0"
+authors = [ "Anthony Nowell <anowell@gmail.com>" ]
+repository = "https://github.com/anowell/pam-rs"
 readme = "README.md"
 keywords = ["pam", "ffi", "linux", "authentication"]
 license = "MIT"
