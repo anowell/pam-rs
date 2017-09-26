@@ -30,3 +30,4 @@ pub mod conv;
 pub mod constants;
 pub mod items;
 pub mod module;
+pub mod hooks;
