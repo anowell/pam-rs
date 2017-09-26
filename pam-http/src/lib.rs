@@ -65,7 +65,7 @@ pub fn sm_authenticate(pamh: &PamHandleT, args: Vec<String>, silent: bool) -> Pa
 }
 
 fn get_url(url: &str, user: &str, password: Option<&str>) -> reqwest::Result<StatusCode> {
-    let client = Client::builder()?.timeout(Duration::from_secs(5)).build()?;
+    let client = Client::builder()?.timeout(Duration::from_secs(15)).build()?;
     client.get(url)?
         .basic_auth(user, password)
         .send()

@@ -3,11 +3,9 @@ extern crate rand;
 
 pub mod ffi;
 
-use pam::module::{PamHandleT, get_item, get_user};
+use pam::module::PamHandle;
 use pam::constants::{PamResultCode, PAM_PROMPT_ECHO_OFF};
 use pam::conv::PamConv;
-use std::collections::HashMap;
-use std::time::Duration;
 use rand::Rng;
 use std::str::FromStr;
 
@@ -30,7 +28,7 @@ macro_rules! pam_try {
 }
 
 // This function performs the task of authenticating the user.
-pub fn sm_authenticate(pamh: &PamHandleT, args: Vec<String>, silent: bool) -> PamResultCode {
+pub fn sm_authenticate(pamh: &PamHandle, args: Vec<String>, silent: bool) -> PamResultCode {
     println!("Let's auth over HTTP");
 
     /* TODO: use args to change difficulty ;-)
@@ -41,9 +39,9 @@ pub fn sm_authenticate(pamh: &PamHandleT, args: Vec<String>, silent: bool) -> Pa
     */
 
     // TODO: maybe we can change difficulty base on user?
-    // let user = pam_try!(get_user(&pamh, None));
+    // let user = pam_try!(pam.get_user(None));
 
-    let conv = match get_item::<PamConv>(&pamh) {
+    let conv = match pamh.get_item::<PamConv>() {
         Ok(conv) => conv,
         Err(err) => {
             println!("Couldn't get pam_conv");
@@ -74,7 +72,7 @@ pub fn sm_authenticate(pamh: &PamHandleT, args: Vec<String>, silent: bool) -> Pa
 // information about a user than their authentication token. This function is used to make such
 // information available to the application. It should only be called after the user has been
 // authenticated but before a session has been established.
-pub fn sm_setcred(_pamh: &PamHandleT, _args: Vec<String>, _silent: bool) -> PamResultCode {
+pub fn sm_setcred(_pamh: &PamHandle, _args: Vec<String>, _silent: bool) -> PamResultCode {
     println!("set credentials");
     PamResultCode::PAM_SUCCESS
 }
@@ -84,7 +82,7 @@ pub fn sm_setcred(_pamh: &PamHandleT, _args: Vec<String>, _silent: bool) -> PamR
 // authentication module. This function checks for other things. Such things might be: the time of
 // day or the date, the terminal line, remote hostname, etc. This function may also determine
 // things like the expiration on passwords, and respond that the user change it before continuing.
-pub fn acct_mgmt(_pamh: &PamHandleT, _args: Vec<String>, _silent: bool) -> PamResultCode {
+pub fn acct_mgmt(_pamh: &PamHandle, _args: Vec<String>, _silent: bool) -> PamResultCode {
     println!("account management");
     PamResultCode::PAM_SUCCESS
 }

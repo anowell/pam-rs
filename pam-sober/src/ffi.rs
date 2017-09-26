@@ -1,4 +1,4 @@
-use pam::module::{PamHandleT};
+use pam::module::{PamHandle};
 use pam::constants::{PamFlag, PamResultCode, PAM_SILENT};
 use std::ffi::CStr;
 use std::os::raw::{c_char, c_int};
@@ -17,7 +17,7 @@ fn extract_argv(argc: c_int, argv: *const *const c_char) -> Vec<String> {
 
 #[no_mangle]
 pub extern "C" fn pam_sm_acct_mgmt(
-	pamh: &PamHandleT,
+	pamh: &PamHandle,
 	flags: PamFlag,
 	argc: c_int,
 	argv: *const *const c_char,
@@ -29,7 +29,7 @@ pub extern "C" fn pam_sm_acct_mgmt(
 
 #[no_mangle]
 pub extern "C" fn pam_sm_authenticate(
-	pamh: &PamHandleT,
+	pamh: &PamHandle,
 	flags: PamFlag,
 	argc: c_int,
 	argv: *const *const c_char,
@@ -41,7 +41,7 @@ pub extern "C" fn pam_sm_authenticate(
 
 #[no_mangle]
 pub extern "C" fn pam_sm_chauthtok(
-	_: &PamHandleT,
+	_: &PamHandle,
 	_: PamFlag,
 	_: c_int,
 	_: *const *const c_char,
@@ -51,7 +51,7 @@ pub extern "C" fn pam_sm_chauthtok(
 
 #[no_mangle]
 pub extern "C" fn pam_sm_close_session(
-	_: &PamHandleT,
+	_: &PamHandle,
 	_: PamFlag,
 	_: c_int,
 	_: *const *const c_char,
@@ -61,7 +61,7 @@ pub extern "C" fn pam_sm_close_session(
 
 #[no_mangle]
 pub extern "C" fn pam_sm_open_session(
-	_: &PamHandleT,
+	_: &PamHandle,
 	_: PamFlag,
 	_: c_int,
 	_: *const *const c_char,
@@ -71,7 +71,7 @@ pub extern "C" fn pam_sm_open_session(
 
 #[no_mangle]
 pub extern "C" fn pam_sm_setcred(
-	pamh: &PamHandleT,
+	pamh: &PamHandle,
 	flags: PamFlag,
 	argc: c_int,
 	argv: *const *const c_char,
