@@ -1,10 +1,9 @@
 #[macro_use] extern crate pam;
 extern crate reqwest;
 
-use pam::module::PamHandle;
+use pam::module::{PamHandle, PamHooks};
 use pam::constants::{PamResultCode, PamFlag, PAM_PROMPT_ECHO_OFF};
 use pam::conv::PamConv;
-use pam::hooks::PamHooks;
 use std::collections::HashMap;
 use std::time::Duration;
 use reqwest::{Client, StatusCode};

@@ -26,8 +26,9 @@
 
 extern crate libc;
 
+#[doc(hidden)]
+pub mod macros;
 pub mod conv;
 pub mod constants;
 pub mod items;
 pub mod module;
-pub mod hooks;
