@@ -32,7 +32,7 @@ pam_hooks!(PamSober);
 impl PamHooks for PamSober {
     // This function performs the task of authenticating the user.
     fn sm_authenticate(pamh: &PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        println!("Let's auth over HTTP");
+        println!("Let's make sure you're sober enough to perform basic addition");
 
         /* TODO: use args to change difficulty ;-)
         let args: HashMap<&str, &str> = args.iter().map(|s| {
