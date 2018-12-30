@@ -1,6 +1,6 @@
 use libc::{c_char, c_int};
-use std::ptr;
 use std::ffi::{CStr, CString};
+use std::ptr;
 
 use constants::PamResultCode;
 use constants::*;
@@ -28,12 +28,13 @@ struct PamResponse {
 /// will be relayed back.
 #[repr(C)]
 pub struct PamConv {
-    conv: extern "C" fn(num_msg: c_int,
-                        pam_message: &&PamMessage,
-                        pam_response: &mut *const PamResponse,
-                        appdata_ptr: *const AppDataPtr)
-                        -> PamResultCode,
-    appdata_ptr: *const AppDataPtr,
+    conv: extern "C" fn(
+        num_msg: c_int,
+        pam_message: &&PamMessage,
+        pam_response: &mut *const PamResponse,
+        appdata_ptr: *const AppDataPtr,
+    ) -> PamResultCode,
+    ppdata_ptr: *const AppDataPtr,
 }
 
 impl PamConv {
