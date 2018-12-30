@@ -64,10 +64,12 @@ impl PamConv {
         let ret = (self.conv)(1, &&msg, &mut resp_ptr, self.appdata_ptr);
 
         if PamResultCode::PAM_SUCCESS == ret {
-            if resp_ptr.is_null() {
+            // PamResponse.resp is null for styles that don't return user input like PAM_TEXT_INFO
+            let response = unsafe { (*resp_ptr).resp };
+            if response.is_null() {
                 Ok(None)
             } else {
-                let bytes = unsafe { CStr::from_ptr((*resp_ptr).resp).to_bytes() };
+                let bytes = unsafe { CStr::from_ptr(response).to_bytes() };
                 Ok(String::from_utf8(bytes.to_vec()).ok())
             }
         } else {
