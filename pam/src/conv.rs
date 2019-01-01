@@ -1,6 +1,6 @@
 use libc::{c_char, c_int};
-use std::ptr;
 use std::ffi::{CStr, CString};
+use std::ptr;
 
 use constants::PamResultCode;
 use constants::*;
@@ -28,12 +28,13 @@ struct PamResponse {
 /// will be relayed back.
 #[repr(C)]
 pub struct PamConv {
-    conv: extern "C" fn(num_msg: c_int,
-                        pam_message: &&PamMessage,
-                        pam_response: &mut *const PamResponse,
-                        appdata_ptr: *const AppDataPtr)
-                        -> PamResultCode,
-    appdata_ptr: *const AppDataPtr,
+    conv: extern "C" fn(
+        num_msg: c_int,
+        pam_message: &&PamMessage,
+        pam_response: &mut *const PamResponse,
+        appdata_ptr: *const AppDataPtr,
+    ) -> PamResultCode,
+    ppdata_ptr: *const AppDataPtr,
 }
 
 impl PamConv {
@@ -54,18 +55,21 @@ impl PamConv {
     /// styles.
     pub fn send(&self, style: PamMessageStyle, msg: &str) -> PamResult<Option<String>> {
         let mut resp_ptr: *const PamResponse = ptr::null();
+        let msg_cstr = CString::new(msg).unwrap();
         let msg = PamMessage {
             msg_style: style,
-            msg: CString::new(msg).unwrap().as_ptr(),
+            msg: msg_cstr.as_ptr(),
         };
 
         let ret = (self.conv)(1, &&msg, &mut resp_ptr, self.appdata_ptr);
 
         if PamResultCode::PAM_SUCCESS == ret {
-            if resp_ptr.is_null() {
+            // PamResponse.resp is null for styles that don't return user input like PAM_TEXT_INFO
+            let response = unsafe { (*resp_ptr).resp };
+            if response.is_null() {
                 Ok(None)
             } else {
-                let bytes = unsafe { CStr::from_ptr((*resp_ptr).resp).to_bytes() };
+                let bytes = unsafe { CStr::from_ptr(response).to_bytes() };
                 Ok(String::from_utf8(bytes.to_vec()).ok())
             }
         } else {
