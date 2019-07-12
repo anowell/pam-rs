@@ -34,7 +34,7 @@ pub struct PamConv {
         pam_response: &mut *const PamResponse,
         appdata_ptr: *const AppDataPtr,
     ) -> PamResultCode,
-    ppdata_ptr: *const AppDataPtr,
+    appdata_ptr: *const AppDataPtr,
 }
 
 impl PamConv {
