@@ -9,4 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pam = { path = "../pam/" }
-reqwest = "0.7"
+reqwest = { version = "0.11.3", features = ["blocking"] }

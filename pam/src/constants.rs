@@ -5,7 +5,6 @@ use libc::{c_int, c_uint};
 pub type PamFlag = c_uint;
 pub type PamItemType = c_int;
 pub type PamMessageStyle = c_int;
-pub type AlwaysZero = c_int;
 
 // The Linux-PAM flags
 // see /usr/include/security/_pam_types.h
@@ -16,36 +15,6 @@ pub const PAM_DELETE_CRED: PamFlag = 0x0004;
 pub const PAM_REINITIALIZE_CRED: PamFlag = 0x0008;
 pub const PAM_REFRESH_CRED: PamFlag = 0x0010;
 pub const PAM_CHANGE_EXPIRED_AUTHTOK: PamFlag = 0x0020;
-
-// The Linux-PAM item types
-// see /usr/include/security/_pam_types.h
-/// The service name
-pub const PAM_SERVICE: PamItemType = 1;
-/// The user name
-pub const PAM_USER: PamItemType = 2;
-/// The tty name
-pub const PAM_TTY: PamItemType = 3;
-/// The remote host name
-pub const PAM_RHOST: PamItemType = 4;
-/// The pam_conv structure
-pub const PAM_CONV: PamItemType = 5;
-/// The authentication token (password)
-pub const PAM_AUTHTOK: PamItemType = 6;
-/// The old authentication token
-pub const PAM_OLDAUTHTOK: PamItemType = 7;
-/// The remote user name
-pub const PAM_RUSER: PamItemType = 8;
-/// the prompt for getting a username
-pub const PAM_USER_PROMPT: PamItemType = 9;
-/* Linux-PAM :extensionsPamItemType = */
-/// app supplied function to override failure delays
-pub const PAM_FAIL_DELAY: PamItemType = 10;
-/// X :display name
-pub const PAM_XDISPLAY: PamItemType = 11;
-/// X :server authentication data
-pub const PAM_XAUTHDATA: PamItemType = 12;
-/// The type for pam_get_authtok
-pub const PAM_AUTHTOK_TYPE: PamItemType = 13;
 
 // Message styles
 pub const PAM_PROMPT_ECHO_OFF: PamMessageStyle = 1;

@@ -9,4 +9,4 @@ crate-type = ["cdylib"]
 
 [dependencies]
 pam = { path = "../pam/" }
-rand = "0.3.16"
+rand = "0.8.4"
