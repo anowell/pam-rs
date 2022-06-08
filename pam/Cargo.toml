@@ -13,4 +13,4 @@ license = "MIT"
 name = "pam"
 
 [dependencies]
-libc = "~0.1.5"
+libc = "0.2.97"

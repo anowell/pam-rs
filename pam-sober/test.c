@@ -23,18 +23,19 @@ int main(int argc, char *argv[]) {
 
 	// Are the credentials correct?
 	if (retval == PAM_SUCCESS) {
-		printf("Credentials accepted.\n");
+		printf("PAM module initialized\n");
 		retval = pam_authenticate(pamh, 0);
 	}
 
 	// Can the accound be used at this time?
 	if (retval == PAM_SUCCESS) {
-		printf("Account is valid.\n");
+		printf("Credentials accepted.\n");
 		retval = pam_acct_mgmt(pamh, 0);
 	}
 
 	// Did everything work?
 	if (retval == PAM_SUCCESS) {
+		printf("Account is valid.\n");
 		printf("Authenticated\n");
 	} else {
 		printf("Not Authenticated\n");

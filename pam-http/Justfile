@@ -3,10 +3,10 @@ all:
     cargo build
 
 install:
-    @cargo build
+    @cargo build --release
     sudo cp conf/http-auth /etc/pam.d/
-    sudo cp target/debug/libpam_http.so /lib/security/pam_http.so
+    sudo cp ../target/release/libpam_http.so /lib/security/pam_http.so
 
 test:
     @just install
-    gcc -o target/pam_test test.c -lpam -lpam_misc
+    gcc -o ../target/pam_test test.c -lpam -lpam_misc

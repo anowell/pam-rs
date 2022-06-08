@@ -3,11 +3,9 @@ use std::ffi::{CStr, CString};
 use std::ptr;
 
 use constants::PamResultCode;
-use constants::*;
-use module::{PamItem, PamResult};
-
-#[allow(missing_copy_implementations)]
-pub enum AppDataPtr {}
+use constants::PamMessageStyle;
+use items::Item;
+use module::PamResult;
 
 #[repr(C)]
 struct PamMessage {
@@ -18,7 +16,7 @@ struct PamMessage {
 #[repr(C)]
 struct PamResponse {
     resp: *const c_char,
-    resp_retcode: AlwaysZero,
+    resp_retcode: libc::c_int, // Unused - always zero
 }
 
 /// `PamConv` acts as a channel for communicating with user.
@@ -27,17 +25,19 @@ struct PamResponse {
 /// pam).  Messages sent will be relayed to the user by the client, and response
 /// will be relayed back.
 #[repr(C)]
-pub struct PamConv {
+pub struct Inner {
     conv: extern "C" fn(
         num_msg: c_int,
         pam_message: &&PamMessage,
         pam_response: &mut *const PamResponse,
-        appdata_ptr: *const AppDataPtr,
+        appdata_ptr: *const libc::c_void,
     ) -> PamResultCode,
-    appdata_ptr: *const AppDataPtr,
+    appdata_ptr: *const libc::c_void,
 }
 
-impl PamConv {
+pub struct Conv<'a>(&'a Inner);
+
+impl<'a> Conv<'a> {
     /// Sends a message to the pam client.
     ///
     /// This will typically result in the user seeing a message or a prompt.
@@ -53,7 +53,7 @@ impl PamConv {
     /// Note that the user experience will depend on how the client implements
     /// these message styles - and not all applications implement all message
     /// styles.
-    pub fn send(&self, style: PamMessageStyle, msg: &str) -> PamResult<Option<String>> {
+    pub fn send(&self, style: PamMessageStyle, msg: &str) -> PamResult<Option<&CStr>> {
         let mut resp_ptr: *const PamResponse = ptr::null();
         let msg_cstr = CString::new(msg).unwrap();
         let msg = PamMessage {
@@ -61,7 +61,7 @@ impl PamConv {
             msg: msg_cstr.as_ptr(),
         };
 
-        let ret = (self.conv)(1, &&msg, &mut resp_ptr, self.appdata_ptr);
+        let ret = (self.0.conv)(1, &&msg, &mut resp_ptr, self.0.appdata_ptr);
 
         if PamResultCode::PAM_SUCCESS == ret {
             // PamResponse.resp is null for styles that don't return user input like PAM_TEXT_INFO
@@ -69,8 +69,7 @@ impl PamConv {
             if response.is_null() {
                 Ok(None)
             } else {
-                let bytes = unsafe { CStr::from_ptr(response).to_bytes() };
-                Ok(String::from_utf8(bytes.to_vec()).ok())
+                Ok(Some(unsafe { CStr::from_ptr(response) }))
             }
         } else {
             Err(ret)
@@ -78,8 +77,18 @@ impl PamConv {
     }
 }
 
-impl PamItem for PamConv {
-    fn item_type() -> PamItemType {
-        PAM_CONV
+impl<'a> Item for Conv<'a> {
+    type Raw = Inner;
+
+    fn type_id() -> crate::items::ItemType {
+        crate::items::ItemType::Conv
+    }
+
+    unsafe fn from_raw(raw: *const Self::Raw) -> Self {
+        Self(&*raw)
+    }
+
+    fn into_raw(self) -> *const Self::Raw {
+        self.0 as _
     }
 }
