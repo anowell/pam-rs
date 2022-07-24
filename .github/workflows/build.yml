@@ -37,4 +37,5 @@ jobs:
           check-repo: ${{ github.event_name == 'push' }}
           ignore-unpublished-changes: true
           # Only publish pam module, as pam-http and pam-sober are example projects
+          path: pam
           args: --package pam-bindings
