@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+      - name: Install PAM dev files
+        run: sudo apt-get install -y libpam0g-dev
       - name: Use cargo cache
         uses: actions/cache@v2
         with:
