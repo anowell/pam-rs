@@ -1,2 +1,16 @@
 [workspace]
 members = ["pam", "pam-sober", "pam-http", "pam-kv"]
+
+[profile.release]
+incremental = true
+lto = "thin"
+split-debuginfo = "packed"
+strip = "debuginfo"
+
+[profile.min-size-release]
+inherits = "release"
+codegen-units = 1
+lto = "fat"
+opt-level = "s"
+split-debuginfo = "packed"
+strip = "debuginfo"
