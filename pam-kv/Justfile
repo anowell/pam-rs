@@ -1,0 +1,17 @@
+
+all:
+    cargo build
+
+build:
+    @cargo build --release
+
+install: build
+    sudo cp ../target/release/libpam_kv.so /lib/security/pam_kv.so
+
+test: install
+    sudo cp conf/kv-auth /etc/pam.d/
+    sudo mkdir -p /etc/pam-rs
+    sudo cp conf/db.csv /etc/pam-rs
+
+    @echo 123 | pamtester kv-auth test authenticate || true
+    @echo secure_password | pamtester -v kv-auth alice authenticate

@@ -1,2 +1,2 @@
 [workspace]
-members = ["pam", "pam-sober", "pam-http"]
+members = ["pam", "pam-sober", "pam-http", "pam-kv"]
