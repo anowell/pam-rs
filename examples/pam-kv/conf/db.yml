@@ -1,0 +1,6 @@
+- username: alice
+  raw: "secure_password"
+- username: bob
+  raw: "good_password"
+- username: charlie
+  raw: "bad-password"

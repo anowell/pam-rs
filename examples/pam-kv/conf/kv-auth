@@ -1,2 +1,2 @@
-auth sufficient pam_kv.so db=/etc/pam-rs/db.csv
+auth sufficient pam_kv.so db=/etc/pam-rs/db.yml
 account sufficient pam_kv.so

@@ -9,7 +9,7 @@ install profile='dev': (build profile)
 install-test-config:
     sudo mkdir -p /etc/pam-rs
     sudo cp conf/kv-auth /etc/pam.d/
-    sudo cp conf/db.csv /etc/pam-rs
+    sudo cp conf/db.yml /etc/pam-rs
 
 test profile='dev': (install profile) (install-test-config)
     @echo 123 | pamtester -v kv-auth test authenticate || true

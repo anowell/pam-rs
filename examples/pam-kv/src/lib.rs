@@ -2,7 +2,6 @@ use std::{collections::HashMap, ffi::CStr};
 
 use argon2::Argon2;
 use balloon_hash::Balloon;
-use csv_async::AsyncDeserializer;
 use log::{debug, error, info, trace, LevelFilter};
 use pam::{
     constants::{
@@ -15,17 +14,45 @@ use pam::{
 use password_hash::{PasswordHash, PasswordVerifier};
 use pbkdf2::Pbkdf2;
 use scrypt::Scrypt;
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Sha256;
 use simplelog::{ColorChoice, Config, TermLogger, TerminalMode};
 use tap::{Tap, TapFallible};
-use tokio::fs::File;
-use tokio_stream::StreamExt;
+use tokio::{fs::File, io::AsyncReadExt};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
-struct UserEntry {
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+struct UserEntry<'a> {
     username: String,
-    password: String,
+    #[serde(flatten, borrow)]
+    password: Password<'a>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+enum Password<'a> {
+    #[serde(rename = "raw")]
+    Raw(String),
+    #[serde(
+        rename = "encrypted",
+        deserialize_with = "deserialize_password_hash",
+        serialize_with = "serialize_password_hash",
+        borrow
+    )]
+    Encrypted(PasswordHash<'a>),
+}
+
+fn serialize_password_hash<S>(hash: &PasswordHash, serializer: S) -> Result<S::Ok, S::Error>
+where
+    S: Serializer,
+{
+    serializer.serialize_str(&format!("{}", hash))
+}
+
+fn deserialize_password_hash<'de, D>(deserializer: D) -> Result<PasswordHash<'de>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: &'de str = Deserialize::deserialize(deserializer)?;
+    Ok(PasswordHash::new(s).map_err(de::Error::custom)?)
 }
 
 struct PamKeyValue;
@@ -77,13 +104,16 @@ impl PamHooksResult for PamKeyValue {
             .tap(|x| trace!("pass: {x:?}"))?
             .unwrap_or("".to_string());
 
-        let file = File::open(db)
+        let mut file = File::open(db)
             .await
             .tap_err(|e| error!("failed to open file: {e}"))
             .map_err(|_| PAM_SYSTEM_ERR)?;
 
-        let mut rdr = AsyncDeserializer::from_reader(file);
-        let mut records = rdr.deserialize::<UserEntry>();
+        let mut data = vec![];
+        file.read_to_end(&mut data)
+            .await
+            .tap_err(|e| error!("failed to read file: {e}"))
+            .map_err(|_| PAM_SYSTEM_ERR)?;
 
         let algs: &[&dyn PasswordVerifier] = &[
             &Argon2::default(),
@@ -92,38 +122,26 @@ impl PamHooksResult for PamKeyValue {
             &Balloon::<Sha256>::default(),
         ];
 
-        while let Some(record) = records.next().await {
-            let UserEntry { username, password } = record
-                .as_ref()
-                .tap_err(|e| error!("failed to deserialize csv entry: {e}"))
-                .map_err(|_| PAM_CONV_ERR)?;
+        let data = serde_yaml::from_slice::<Vec<UserEntry>>(&data)
+            .tap_err(|e| error!("failed to parse yaml: {e}"))
+            .map_err(|_| PAM_CONV_ERR)?;
 
-            trace!("record: {record:?}");
-
-            if *username != user {
-                continue;
-            }
-
-            match PasswordHash::new(password) {
-                Ok(hash) if hash.verify_password(algs, &pass).is_ok() => {
-                    trace!("found user");
-                    return Ok(());
-                }
-                Err(_) if pass == *password => {
-                    trace!("found user");
-                    return Ok(());
-                }
-                Ok(_) => {
+        if data.into_iter().filter(|x| x.username == user).any(|x| {
+            match &x.password {
+                Password::Raw(password) if pass == *password => true,
+                Password::Encrypted(hash) if hash.verify_password(algs, &pass).is_ok() => true,
+                _ => {
                     debug!("found user in records, but password is invalid");
-                }
-                Err(e) => {
-                    error!("password is invalid: {e}")
+                    false
                 }
             }
+        }) {
+            trace!("found user");
+            Ok(())
+        } else {
+            error!("user not found");
+            Err(PAM_AUTH_ERR)
         }
-
-        error!("user not found");
-        Err(PAM_AUTH_ERR)
     }
 
     #[tokio::main]
