@@ -18,7 +18,7 @@ balloon-hash = "0.3.0"
 bcrypt-pbkdf = "0.9.0"
 csv-async = { version = "1.2.4", features = ["tokio"] }
 log = "0.4.17"
-pam-module = { path = "../pam/" }
+pam-module = { path = "../../pam" }
 password-hash = "0.4.2"
 pbkdf2 = "0.11.0"
 scrypt = "0.10.0"

@@ -1,13 +1,13 @@
 [package]
-name = "pam-sober"
+name = "pam-http"
 version = "0.1.0"
 authors = ["Anthony Nowell <anowell@gmail.com>"]
 edition = "2021"
 
 [lib]
-name = "pam_sober"
+name = "pam_http"
 crate-type = ["cdylib"]
 
 [dependencies]
-pam-module = { path = "../pam/" }
-rand = "0.8.5"
+pam-module = { path = "../../pam" }
+reqwest = { version = "0.11.13", features = ["blocking"] }
