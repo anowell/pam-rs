@@ -8,6 +8,7 @@ use core::ffi::CStr;
 use libc::c_char;
 
 use crate::constants::{PamFlag, PamResultCode};
+use crate::items::ItemType;
 
 /// Opaque type, used as a pointer when making pam API calls.
 ///
@@ -53,6 +54,25 @@ extern "C" {
     fn pam_get_user(
         pamh: *const PamHandle,
         user: &*mut c_char,
+        prompt: *const c_char,
+    ) -> PamResultCode;
+
+    fn pam_get_authtok(
+        pamh: *const PamHandle,
+        item: ItemType,
+        authtok: &*mut c_char,
+        prompt: *const c_char,
+    ) -> PamResultCode;
+
+    fn pam_get_authtok_noverify(
+        pamh: *const PamHandle,
+        authtok: &*mut c_char,
+        prompt: *const c_char,
+    ) -> PamResultCode;
+
+    fn pam_get_authtok_verify(
+        pamh: *const PamHandle,
+        authtok: &*mut c_char,
         prompt: *const c_char,
     ) -> PamResultCode;
 }
@@ -203,6 +223,38 @@ impl PamHandle {
             String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)
         } else {
             Err(res)
+        }
+    }
+
+    pub fn get_authtok(&self, item: ItemType, prompt: Option<&str>) -> PamResult<Option<String>> {
+        let token: *mut c_char = core::ptr::null_mut();
+        let prompt_string;
+        match unsafe {
+            pam_get_authtok(
+                self,
+                item,
+                &token,
+                match prompt {
+                    Some(p) => {
+                        prompt_string = CString::new(p).unwrap();
+                        prompt_string.as_ptr()
+                    }
+                    None => core::ptr::null(),
+                },
+            )
+        } {
+            PamResultCode::PAM_SUCCESS if !token.is_null() => {
+                let bytes = unsafe { CStr::from_ptr(token as *const c_char).to_bytes() };
+                let pass =
+                    String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)?;
+                Ok(if pass.trim().is_empty() {
+                    None
+                } else {
+                    Some(pass)
+                })
+            }
+            PamResultCode::PAM_SUCCESS => Ok(None),
+            e => Err(e),
         }
     }
 }
