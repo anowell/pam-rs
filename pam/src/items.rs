@@ -50,10 +50,10 @@ pub trait Item {
 macro_rules! cstr_item {
     ($name:ident) => {
         #[derive(Debug)]
-        pub struct $name<'s>(pub &'s std::ffi::CStr);
+        pub struct $name<'s>(pub &'s core::ffi::CStr);
 
-        impl<'s> std::ops::Deref for $name<'s> {
-            type Target = &'s std::ffi::CStr;
+        impl<'s> core::ops::Deref for $name<'s> {
+            type Target = &'s core::ffi::CStr;
             fn deref(&self) -> &Self::Target {
                 &self.0
             }
@@ -67,7 +67,7 @@ macro_rules! cstr_item {
             }
 
             unsafe fn from_raw(raw: *const Self::Raw) -> Self {
-                Self(std::ffi::CStr::from_ptr(raw))
+                Self(core::ffi::CStr::from_ptr(raw))
             }
 
             fn into_raw(self) -> *const Self::Raw {

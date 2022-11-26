@@ -1,3 +1,4 @@
+#![no_std]
 //! Interface to the pluggable authentication module framework (PAM).
 //!
 //! The goal of this library is to provide a type-safe API that can be used to
@@ -24,7 +25,7 @@
 //! a Linux system.  That means that it might take some work to get this library
 //! to work on other platforms.
 
-extern crate libc;
+extern crate alloc;
 
 pub mod constants;
 pub mod conv;

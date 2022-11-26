@@ -1,11 +1,11 @@
+use alloc::ffi::CString;
+use core::ffi::CStr;
+use core::ptr;
 use libc::{c_char, c_int};
-use std::ffi::{CStr, CString};
-use std::ptr;
 
-use constants::PamResultCode;
-use constants::PamMessageStyle;
-use items::Item;
-use module::PamResult;
+use crate::constants::{PamMessageStyle, PamResultCode};
+use crate::items::Item;
+use crate::module::PamResult;
 
 #[repr(C)]
 struct PamMessage {

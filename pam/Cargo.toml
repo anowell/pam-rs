@@ -8,9 +8,11 @@ repository = "https://github.com/anowell/pam-rs"
 readme = "../README.md"
 keywords = ["pam", "ffi", "linux", "authentication"]
 license = "MIT"
+edition = "2021"
 
 [lib]
 name = "pam"
 
 [dependencies]
 libc = "0.2.97"
+strum = { version = "0.24", features = ["derive"] }

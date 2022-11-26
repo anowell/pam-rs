@@ -34,8 +34,8 @@ macro_rules! pam_hooks {
     ($ident:ident) => {
         pub use self::pam_hooks_scope::*;
         mod pam_hooks_scope {
-            use std::ffi::CStr;
-            use std::os::raw::{c_char, c_int};
+            use core::ffi::{c_char, c_int, CStr};
+
             use $crate::constants::{PamFlag, PamResultCode};
             use $crate::module::{PamHandle, PamHooks};
 
@@ -132,7 +132,7 @@ macro_rules! pam_try {
 
 #[cfg(test)]
 pub mod test {
-    use module::PamHooks;
+    use crate::module::PamHooks;
 
     struct Foo;
     impl PamHooks for Foo {}

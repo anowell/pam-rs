@@ -1,9 +1,13 @@
 //! Functions for use in pam modules.
 
+use alloc::boxed::Box;
+use alloc::ffi::CString;
+use alloc::string::String;
+use alloc::vec::Vec;
+use core::ffi::CStr;
 use libc::c_char;
-use std::ffi::{CStr, CString};
 
-use constants::{PamFlag, PamResultCode};
+use crate::constants::{PamFlag, PamResultCode};
 
 /// Opaque type, used as a pointer when making pam API calls.
 ///
@@ -36,13 +40,13 @@ extern "C" {
 
     fn pam_get_item(
         pamh: *const PamHandle,
-        item_type: crate::items::ItemType,
+        item_type: ItemType,
         item: &mut *const libc::c_void,
     ) -> PamResultCode;
 
     fn pam_set_item(
         pamh: *mut PamHandle,
-        item_type: crate::items::ItemType,
+        item_type: ItemType,
         item: *const libc::c_void,
     ) -> PamResultCode;
 
@@ -76,9 +80,9 @@ impl PamHandle {
     ///
     /// The data stored under the provided key must be of type `T` otherwise the
     /// behaviour of this funtion is undefined.
-    pub unsafe fn get_data<'a, T>(&'a self, key: &str) -> PamResult<&'a T> {
+    pub unsafe fn get_data<T>(&self, key: &str) -> PamResult<&T> {
         let c_key = CString::new(key).unwrap();
-        let mut ptr: *const libc::c_void = std::ptr::null();
+        let mut ptr: *const libc::c_void = core::ptr::null();
         let res = pam_get_data(self, c_key.as_ptr(), &mut ptr);
         if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {
             let typed_ptr = ptr.cast::<T>();
@@ -125,7 +129,7 @@ impl PamHandle {
     ///
     /// Returns an error if the underlying PAM function call fails.
     pub fn get_item<T: crate::items::Item>(&self) -> PamResult<Option<T>> {
-        let mut ptr: *const libc::c_void = std::ptr::null();
+        let mut ptr: *const libc::c_void = core::ptr::null();
         let (res, item) = unsafe {
             let r = pam_get_item(self, T::type_id(), &mut ptr);
             let typed_ptr = ptr.cast::<T::Raw>();
@@ -160,7 +164,7 @@ impl PamHandle {
     /// Panics if the provided item key contains a nul byte
     pub fn set_item_str<T: crate::items::Item>(&mut self, item: T) -> PamResult<()> {
         let res =
-            unsafe { pam_set_item(self, T::type_id(), item.into_raw().cast::<libc::c_void>())};
+            unsafe { pam_set_item(self, T::type_id(), item.into_raw().cast::<libc::c_void>()) };
         if PamResultCode::PAM_SUCCESS == res {
             Ok(())
         } else {
@@ -183,14 +187,14 @@ impl PamHandle {
     ///
     /// Panics if the provided prompt string contains a nul byte
     pub fn get_user(&self, prompt: Option<&str>) -> PamResult<String> {
-        let ptr: *mut c_char = std::ptr::null_mut();
+        let ptr: *mut c_char = core::ptr::null_mut();
         let prompt_string;
         let c_prompt = match prompt {
             Some(p) => {
                 prompt_string = CString::new(p).unwrap();
                 prompt_string.as_ptr()
             }
-            None => std::ptr::null(),
+            None => core::ptr::null(),
         };
         let res = unsafe { pam_get_user(self, &ptr, c_prompt) };
         if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {

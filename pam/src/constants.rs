@@ -1,4 +1,5 @@
 use libc::{c_int, c_uint};
+use strum::Display;
 
 // TODO: Import constants from C header file at compile time.
 
@@ -28,7 +29,7 @@ pub const PAM_BINARY_PROMPT: PamMessageStyle = 7;
 // The Linux-PAM return values
 // see /usr/include/security/_pam_types.h
 #[allow(non_camel_case_types, dead_code)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Display, PartialEq)]
 #[repr(C)]
 pub enum PamResultCode {
     PAM_SUCCESS = 0,
