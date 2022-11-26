@@ -1,28 +1,27 @@
-extern crate pam;
-extern crate reqwest;
+use std::{collections::HashMap, ffi::CStr, time::Duration};
 
-use pam::constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF};
-use pam::conv::Conv;
-use pam::module::{PamHandle, PamHooks};
-use reqwest::blocking::Client;
-use reqwest::StatusCode;
-use std::collections::HashMap;
-use std::ffi::CStr;
-use std::time::Duration;
-use pam::pam_try;
+use pam::{
+    constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_OFF},
+    conv::Conv,
+    module::{PamHandle, PamHooks},
+    pam_try,
+};
+use reqwest::{blocking::Client, StatusCode};
 
 struct PamHttp;
 pam::pam_hooks!(PamHttp);
 
 impl PamHooks for PamHttp {
+    fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
+        println!("account management");
+        PamResultCode::PAM_SUCCESS
+    }
+
     // This function performs the task of authenticating the user.
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         println!("Let's auth over HTTP");
 
-        let args: Vec<_> = args
-            .iter()
-            .map(|s| s.to_string_lossy())
-            .collect();
+        let args: Vec<_> = args.iter().map(|s| s.to_string_lossy()).collect();
         let args: HashMap<&str, &str> = args
             .iter()
             .map(|s| {
@@ -54,10 +53,7 @@ impl PamHooks for PamHttp {
             None => None,
         };
         println!("Got a password {:?}", password);
-        let status = pam_try!(
-            get_url(url, &user, password),
-            PamResultCode::PAM_AUTH_ERR
-        );
+        let status = pam_try!(get_url(url, &user, password), PamResultCode::PAM_AUTH_ERR);
 
         if !status.is_success() {
             println!("HTTP Error: {}", status);
@@ -69,11 +65,6 @@ impl PamHooks for PamHttp {
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         println!("set credentials");
-        PamResultCode::PAM_SUCCESS
-    }
-
-    fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        println!("account management");
         PamResultCode::PAM_SUCCESS
     }
 }

@@ -1,6 +1,6 @@
 [package]
 
-name = "pam-bindings"
+name = "pam-module"
 description = "PAM bindings for Rust"
 version = "0.1.1"
 authors = [ "Anthony Nowell <anowell@gmail.com>" ]
@@ -14,5 +14,5 @@ edition = "2021"
 name = "pam"
 
 [dependencies]
-libc = "0.2.97"
+libc = "0.2.137"
 strum = { version = "0.24", features = ["derive"] }

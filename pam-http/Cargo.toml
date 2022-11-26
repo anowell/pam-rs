@@ -2,11 +2,12 @@
 name = "pam-http"
 version = "0.1.0"
 authors = ["Anthony Nowell <anowell@gmail.com>"]
+edition = "2021"
 
 [lib]
 name = "pam_http"
 crate-type = ["cdylib"]
 
 [dependencies]
-pam-bindings = { path = "../pam/" }
-reqwest = { version = "0.11.3", features = ["blocking"] }
+pam-module = { path = "../pam/" }
+reqwest = { version = "0.11.13", features = ["blocking"] }

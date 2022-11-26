@@ -2,11 +2,12 @@
 name = "pam-sober"
 version = "0.1.0"
 authors = ["Anthony Nowell <anowell@gmail.com>"]
+edition = "2021"
 
 [lib]
 name = "pam_sober"
 crate-type = ["cdylib"]
 
 [dependencies]
-pam-bindings = { path = "../pam/" }
-rand = "0.8.4"
+pam-module = { path = "../pam/" }
+rand = "0.8.5"

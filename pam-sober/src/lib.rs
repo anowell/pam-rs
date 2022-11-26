@@ -1,28 +1,31 @@
-extern crate pam;
-extern crate rand;
+use std::{ffi::CStr, str::FromStr};
 
-use pam::constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_ON};
-use pam::conv::Conv;
-use pam::module::{PamHandle, PamHooks};
+use pam::{
+    constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_ON},
+    conv::Conv,
+    module::{PamHandle, PamHooks},
+    pam_try,
+};
 use rand::Rng;
-use std::ffi::CStr;
-use std::str::FromStr;
-use pam::pam_try;
 
 struct PamSober;
 pam::pam_hooks!(PamSober);
 
 impl PamHooks for PamSober {
+    fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
+        println!("account management");
+        PamResultCode::PAM_SUCCESS
+    }
+
     // This function performs the task of authenticating the user.
     fn sm_authenticate(pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         println!("Let's make sure you're sober enough to perform basic addition");
 
-        /* TODO: use args to change difficulty ;-)
-        let args: HashMap<&str, &str> = args.iter().map(|s| {
-            let mut parts = s.splitn(2, "=");
-            (parts.next().unwrap(), parts.next().unwrap_or(""))
-        }).collect();
-        */
+        // TODO: use args to change difficulty ;-)
+        // let args: HashMap<&str, &str> = args.iter().map(|s| {
+        // let mut parts = s.splitn(2, "=");
+        // (parts.next().unwrap(), parts.next().unwrap_or(""))
+        // }).collect();
 
         // TODO: maybe we can change difficulty base on user?
         // let user = pam_try!(pam.get_user(None));
@@ -63,11 +66,6 @@ impl PamHooks for PamSober {
 
     fn sm_setcred(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
         println!("set credentials");
-        PamResultCode::PAM_SUCCESS
-    }
-
-    fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResultCode {
-        println!("account management");
         PamResultCode::PAM_SUCCESS
     }
 }
