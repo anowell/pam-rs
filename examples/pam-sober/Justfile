@@ -1,12 +1,14 @@
+out_dir_prefix := clean(join(invocation_directory(), 'output'))
 
-all:
-    cargo build
+build profile='dev':
+    @cargo build -Z unstable-options --profile {{profile}} --out-dir {{clean(join(out_dir_prefix, profile))}}
 
-install:
-    @cargo build --release
+install profile='dev': (build profile)
     sudo cp conf/sober-auth /etc/pam.d/
-    sudo cp ../target/release/libpam_sober.so /lib/security/pam_sober.so
+    sudo cp {{clean(join(out_dir_prefix, profile))}}/libpam_sober.so /lib/security/pam_sober.so
 
-test:
-    @just install
-    gcc -o ../target/pam_test test.c -lpam -lpam_misc
+install-test-config:
+    sudo cp conf/sober-auth /etc/pam.d/
+
+test profile='dev': (install profile) (install-test-config)
+    pamtester -v sober-auth alice authenticate

@@ -1,17 +1,16 @@
+out_dir_prefix := clean(join(invocation_directory(), 'output'))
 
-all:
-    cargo build
+build profile='dev':
+    @cargo build -Z unstable-options --profile {{profile}} --out-dir {{clean(join(out_dir_prefix, profile))}}
 
-build:
-    @cargo build --release
+install profile='dev': (build profile)
+    sudo cp {{clean(join(out_dir_prefix, profile))}}/libpam_kv.so /lib/security/pam_kv.so
 
-install: build
-    sudo cp ../target/release/libpam_kv.so /lib/security/pam_kv.so
-
-test: install
-    sudo cp conf/kv-auth /etc/pam.d/
+install-test-config:
     sudo mkdir -p /etc/pam-rs
+    sudo cp conf/kv-auth /etc/pam.d/
     sudo cp conf/db.csv /etc/pam-rs
 
-    @echo 123 | pamtester kv-auth test authenticate || true
+test profile='dev': (install profile) (install-test-config)
+    @echo 123 | pamtester -v kv-auth test authenticate || true
     @echo secure_password | pamtester -v kv-auth alice authenticate
