@@ -216,34 +216,27 @@ impl PamHandle {
             }
             None => core::ptr::null(),
         };
-        let res = unsafe { pam_get_user(self, &ptr, c_prompt) };
-        if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {
-            let const_ptr = ptr as *const c_char;
-            let bytes = unsafe { CStr::from_ptr(const_ptr).to_bytes() };
-            String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)
-        } else {
-            Err(res)
+        match unsafe { pam_get_user(self, &ptr, c_prompt) } {
+            PAM_SUCCESS if !ptr.is_null() => {
+                let bytes = unsafe { CStr::from_ptr(ptr as *const c_char).to_bytes() };
+                String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)
+            }
+            e => Err(e),
         }
     }
 
     pub fn get_authtok(&self, item: ItemType, prompt: Option<&str>) -> PamResult<Option<String>> {
         let token: *mut c_char = core::ptr::null_mut();
         let prompt_string;
-        match unsafe {
-            pam_get_authtok(
-                self,
-                item,
-                &token,
-                match prompt {
-                    Some(p) => {
-                        prompt_string = CString::new(p).unwrap();
-                        prompt_string.as_ptr()
-                    }
-                    None => core::ptr::null(),
-                },
-            )
-        } {
-            PamResultCode::PAM_SUCCESS if !token.is_null() => {
+        let c_prompt = match prompt {
+            Some(p) => {
+                prompt_string = CString::new(p).unwrap();
+                prompt_string.as_ptr()
+            }
+            None => core::ptr::null(),
+        };
+        match unsafe { pam_get_authtok(self, item, &token, c_prompt) } {
+            PAM_SUCCESS if !token.is_null() => {
                 let bytes = unsafe { CStr::from_ptr(token as *const c_char).to_bytes() };
                 let pass =
                     String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)?;
@@ -253,7 +246,7 @@ impl PamHandle {
                     Some(pass)
                 })
             }
-            PamResultCode::PAM_SUCCESS => Ok(None),
+            PAM_SUCCESS => Ok(None),
             e => Err(e),
         }
     }
