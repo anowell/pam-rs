@@ -12,5 +12,7 @@ install-test-config:
     sudo cp conf/db.yml /etc/pam-rs
 
 test profile='dev': (install profile) (install-test-config)
-    @echo 123 | pamtester -v kv-auth test authenticate || true
-    @echo secure_password | pamtester -v kv-auth alice authenticate
+    @echo secure_password | pamtester -v kv-auth alice authenticate || true
+    @echo good_password | pamtester -v kv-auth bob authenticate || true
+    @echo nonexistent | pamtester -v kv-auth nobody authenticate || true
+    @echo wrong-password | pamtester -v kv-auth alice authenticate || true

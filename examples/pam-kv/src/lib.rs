@@ -2,11 +2,11 @@ use std::{collections::HashMap, ffi::CStr};
 
 use argon2::Argon2;
 use balloon_hash::Balloon;
-use log::{debug, error, info, trace, LevelFilter};
+use log::{error, trace, LevelFilter};
 use pam::{
     constants::{
         PamFlag,
-        PamResultCode::{PAM_ABORT, PAM_AUTH_ERR, PAM_CONV_ERR, PAM_SYSTEM_ERR},
+        PamResultCode::{PAM_ABORT, PAM_AUTH_ERR, PAM_CONV_ERR, PAM_SYSTEM_ERR, PAM_USER_UNKNOWN},
     },
     items::ItemType,
     module::{PamHandle, PamHooksResult, PamResult},
@@ -25,6 +25,7 @@ struct UserEntry<'a> {
     username: String,
     #[serde(flatten, borrow)]
     password: Password<'a>,
+    disabled: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
@@ -59,11 +60,11 @@ struct PamKeyValue;
 pam::pam_hooks!(PamKeyValue);
 
 impl PamHooksResult for PamKeyValue {
-    #[tokio::main]
-    async fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag) -> PamResult<()> {
-        info!("account management");
-        Ok(())
-    }
+    // #[tokio::main]
+    // async fn acct_mgmt(_pamh: &mut PamHandle, _args: Vec<&CStr>, _flags: PamFlag)
+    // -> PamResult<()> {     info!("account management");
+    //     Ok(())
+    // }
 
     #[tokio::main]
     async fn sm_authenticate(
@@ -115,44 +116,58 @@ impl PamHooksResult for PamKeyValue {
             .tap_err(|e| error!("failed to read file: {e}"))
             .map_err(|_| PAM_SYSTEM_ERR)?;
 
-        let algs: &[&dyn PasswordVerifier] = &[
-            &Argon2::default(),
-            &Pbkdf2,
-            &Scrypt,
-            &Balloon::<Sha256>::default(),
+        let algorithms: Vec<Box<dyn PasswordVerifier>> = vec![
+            Box::new(Argon2::default()),
+            Box::new(Pbkdf2),
+            Box::new(Scrypt),
+            Box::new(Balloon::<Sha256>::default()),
         ];
 
-        let data = serde_yaml::from_slice::<Vec<UserEntry>>(&data)
-            .tap_err(|e| error!("failed to parse yaml: {e}"))
-            .map_err(|_| PAM_CONV_ERR)?;
+        let algorithms: Vec<&dyn PasswordVerifier> =
+            algorithms.iter().map(|x| x.as_ref()).collect::<Vec<_>>();
 
-        if data.into_iter().filter(|x| x.username == user).any(|x| {
-            match &x.password {
-                Password::Raw(password) if pass == *password => true,
-                Password::Encrypted(hash) if hash.verify_password(algs, &pass).is_ok() => true,
-                _ => {
-                    debug!("found user in records, but password is invalid");
-                    false
+        let data: HashMap<String, UserEntry> = serde_yaml::from_slice::<Vec<UserEntry>>(&data)
+            .tap_err(|e| error!("failed to parse yaml: {e}"))
+            .map_err(|_| PAM_CONV_ERR)?
+            .into_iter()
+            .map(|x| (x.username.clone(), x))
+            .collect();
+
+        match data.get(&user) {
+            None => {
+                error!("user not existing in database");
+                Err(PAM_USER_UNKNOWN)
+            }
+            Some(user) => {
+                match &user.password {
+                    Password::Raw(password) if pass == *password => {
+                        trace!("found user");
+                        Ok(())
+                    }
+                    Password::Encrypted(hash)
+                        if hash.verify_password(&algorithms, &pass).is_ok() =>
+                    {
+                        trace!("found user");
+                        Ok(())
+                    }
+                    _ => {
+                        error!("wrong password");
+                        Err(PAM_AUTH_ERR)
+                    }
                 }
             }
-        }) {
-            trace!("found user");
-            Ok(())
-        } else {
-            error!("user not found");
-            Err(PAM_AUTH_ERR)
         }
     }
 
-    #[tokio::main]
-    async fn sm_setcred(
-        _pamh: &mut PamHandle,
-        _args: Vec<&CStr>,
-        _flags: PamFlag,
-    ) -> PamResult<()> {
-        info!("set credentials");
-        Ok(())
-    }
+    // #[tokio::main]
+    // async fn sm_setcred(
+    //     _pamh: &mut PamHandle,
+    //     _args: Vec<&CStr>,
+    //     _flags: PamFlag,
+    // ) -> PamResult<()> {
+    //     info!("set credentials");
+    //     Ok(())
+    // }
 }
 
 #[ctor::ctor]
