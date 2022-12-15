@@ -15,5 +15,4 @@ name = "pam"
 
 [dependencies]
 libc = "0.2.137"
-pam-sys = "1.0.0-alpha4"
 strum = { version = "0.24", features = ["derive"] }
