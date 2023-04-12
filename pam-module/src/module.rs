@@ -104,7 +104,7 @@ impl PamHandle {
         let c_key = CString::new(key).unwrap();
         let mut ptr: *const libc::c_void = core::ptr::null();
         let res = pam_get_data(self, c_key.as_ptr(), &mut ptr);
-        if PamResultCode::PAM_SUCCESS == res && !ptr.is_null() {
+        if PAM_SUCCESS == res && !ptr.is_null() {
             let typed_ptr = ptr.cast::<T>();
             let data: &T = &*typed_ptr;
             Ok(data)
@@ -393,38 +393,26 @@ where
     T: PamHooksResult,
 {
     fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::acct_mgmt(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::acct_mgmt(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 
     fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::sm_authenticate(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::sm_authenticate(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 
     fn sm_chauthtok(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::sm_chauthtok(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::sm_chauthtok(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 
     fn sm_close_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::sm_close_session(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::sm_close_session(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 
     fn sm_open_session(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::sm_open_session(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::sm_open_session(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 
     fn sm_setcred(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-        T::sm_setcred(pamh, args, flags)
-            .map(|_| PAM_SUCCESS)
-            .unwrap_or_else(|e| e)
+        T::sm_setcred(pamh, args, flags).map_or_else(|e| e, |_| PAM_SUCCESS)
     }
 }

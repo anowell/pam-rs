@@ -4,29 +4,37 @@
 ///
 /// ## Examples:
 ///
-/// Here is full example of a PAM module that would authenticate and authorize everybody:
+/// Here is full example of a PAM module that would authenticate and authorize
+/// everybody:
 ///
 /// ```
 /// #[macro_use] extern crate pam;
 ///
-/// use pam::module::{PamHooks, PamHandle};
-/// use pam::constants::{PamResultCode, PamFlag};
 /// use std::ffi::CStr;
+///
+/// use pam::{
+///     constants::{PamFlag, PamResultCode},
+///     module::{PamHandle, PamHooks},
+/// };
 ///
 /// # fn main() {}
 /// struct MyPamModule;
 /// pam_hooks!(MyPamModule);
 ///
 /// impl PamHooks for MyPamModule {
-///    fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-///        println!("Everybody is authenticated!");
-///        PamResultCode::PAM_SUCCESS
-///    }
+///     fn sm_authenticate(
+///         pamh: &mut PamHandle,
+///         args: Vec<&CStr>,
+///         flags: PamFlag,
+///     ) -> PamResultCode {
+///         println!("Everybody is authenticated!");
+///         PamResultCode::PAM_SUCCESS
+///     }
 ///
-///    fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-///        println!("Everybody is authorized!");
-///        PamResultCode::PAM_SUCCESS
-///    }
+///     fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
+///         println!("Everybody is authorized!");
+///         PamResultCode::PAM_SUCCESS
+///     }
 /// }
 /// ```
 #[macro_export]
@@ -36,8 +44,10 @@ macro_rules! pam_hooks {
         mod pam_hooks_scope {
             use core::ffi::{c_char, c_int, CStr};
 
-            use $crate::constants::{PamFlag, PamResultCode};
-            use $crate::module::{PamHandle, PamHooks};
+            use $crate::{
+                constants::{PamFlag, PamResultCode},
+                module::{PamHandle, PamHooks},
+            };
 
             fn extract_argv<'a>(argc: c_int, argv: *const *const c_char) -> Vec<&'a CStr> {
                 (0..argc)
