@@ -1,6 +1,6 @@
 //! Functions for use in pam modules.
 
-use alloc::{boxed::Box, ffi::CString, string::String, vec::Vec};
+use alloc::{borrow::Cow, boxed::Box, ffi::CString, vec::Vec};
 use core::ffi::CStr;
 
 use libc::c_char;
@@ -79,7 +79,7 @@ extern "C" {
 
 pub extern "C" fn cleanup<T>(_: *const PamHandle, c_data: *mut libc::c_void, _: PamResultCode) {
     unsafe {
-        let _data: Box<T> = Box::from_raw(c_data.cast::<T>());
+        drop(Box::from_raw(c_data.cast::<T>()));
     }
 }
 
@@ -206,99 +206,88 @@ impl PamHandle {
     /// # Panics
     ///
     /// Panics if the provided prompt string contains a nul byte
-    pub fn get_user(&self, prompt: Option<&str>) -> PamResult<String> {
+    pub fn get_user(&self, prompt: Option<&str>) -> PamResult<Cow<'_, str>> {
         let ptr: *mut c_char = core::ptr::null_mut();
-        let prompt_string;
-        let c_prompt = match prompt {
-            Some(p) => {
-                prompt_string = CString::new(p).unwrap();
-                prompt_string.as_ptr()
-            }
-            None => core::ptr::null(),
+        let code = unsafe {
+            pam_get_user(
+                self,
+                &ptr,
+                prompt
+                    .and_then(|x| CString::new(x).ok())
+                    .map_or(core::ptr::null(), |x| x.as_ptr()),
+            )
         };
-        match unsafe { pam_get_user(self, &ptr, c_prompt) } {
-            PAM_SUCCESS if !ptr.is_null() => {
-                let bytes = unsafe { CStr::from_ptr(ptr as *const c_char).to_bytes() };
-                String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)
-            }
+        match code {
+            PAM_SUCCESS if !ptr.is_null() => unsafe {
+                Ok(CStr::from_ptr(ptr as *const c_char)
+                    .to_str()
+                    .map_err(|_| PamResultCode::PAM_CONV_ERR)?
+                    .into())
+            },
             e => Err(e),
         }
     }
 
-    pub fn get_authtok(&self, item: ItemType, prompt: Option<&str>) -> PamResult<Option<String>> {
+    pub fn get_authtok(
+        &self,
+        item: ItemType,
+        prompt: Option<&str>,
+    ) -> PamResult<Option<Cow<'_, str>>> {
         let token: *mut c_char = core::ptr::null_mut();
-        let prompt_string;
-        let c_prompt = match prompt {
-            Some(p) => {
-                prompt_string = CString::new(p).unwrap();
-                prompt_string.as_ptr()
-            }
-            None => core::ptr::null(),
-        };
-        match unsafe { pam_get_authtok(self, item, &token, c_prompt) } {
-            PAM_SUCCESS if !token.is_null() => {
-                let bytes = unsafe { CStr::from_ptr(token as *const c_char).to_bytes() };
-                let pass =
-                    String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)?;
-                Ok(if pass.trim().is_empty() {
-                    None
-                } else {
-                    Some(pass)
-                })
-            }
-            PAM_SUCCESS => Ok(None),
-            e => Err(e),
-        }
+        self.get_authtok_post(token, unsafe {
+            pam_get_authtok(
+                self,
+                item,
+                &token,
+                prompt
+                    .and_then(|x| CString::new(x).ok())
+                    .map_or(core::ptr::null(), |x| x.as_ptr()),
+            )
+        })
     }
 
-    pub fn get_authtok_verify(&self, prompt: Option<&str>) -> PamResult<Option<String>> {
+    pub fn get_authtok_verify(&self, prompt: Option<&str>) -> PamResult<Option<Cow<'_, str>>> {
         let token: *mut c_char = core::ptr::null_mut();
-        let prompt_string;
-        let c_prompt = match prompt {
-            Some(p) => {
-                prompt_string = CString::new(p).unwrap();
-                prompt_string.as_ptr()
-            }
-            None => core::ptr::null(),
-        };
-        match unsafe { pam_get_authtok_verify(self, &token, c_prompt) } {
-            PAM_SUCCESS if !token.is_null() => {
-                let bytes = unsafe { CStr::from_ptr(token as *const c_char).to_bytes() };
-                let pass =
-                    String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)?;
-                Ok(if pass.trim().is_empty() {
-                    None
-                } else {
-                    Some(pass)
-                })
-            }
-            PAM_SUCCESS => Ok(None),
-            e => Err(e),
-        }
+        self.get_authtok_post(token, unsafe {
+            pam_get_authtok_verify(
+                self,
+                &token,
+                prompt
+                    .and_then(|x| CString::new(x).ok())
+                    .map_or(core::ptr::null(), |x| x.as_ptr()),
+            )
+        })
     }
 
-    pub fn get_authtok_noverify(&self, prompt: Option<&str>) -> PamResult<Option<String>> {
+    pub fn get_authtok_noverify(&self, prompt: Option<&str>) -> PamResult<Option<Cow<'_, str>>> {
         let token: *mut c_char = core::ptr::null_mut();
-        let prompt_string;
-        let c_prompt = match prompt {
-            Some(p) => {
-                prompt_string = CString::new(p).unwrap();
-                prompt_string.as_ptr()
-            }
-            None => core::ptr::null(),
-        };
-        match unsafe { pam_get_authtok_noverify(self, &token, c_prompt) } {
-            PAM_SUCCESS if !token.is_null() => {
-                let bytes = unsafe { CStr::from_ptr(token as *const c_char).to_bytes() };
-                let pass =
-                    String::from_utf8(bytes.to_vec()).map_err(|_| PamResultCode::PAM_CONV_ERR)?;
+        self.get_authtok_post(token, unsafe {
+            pam_get_authtok_noverify(
+                self,
+                &token,
+                prompt
+                    .and_then(|x| CString::new(x).ok())
+                    .map_or(core::ptr::null(), |x| x.as_ptr()),
+            )
+        })
+    }
+
+    fn get_authtok_post<'a>(
+        &self,
+        token: *mut c_char,
+        code: PamResultCode,
+    ) -> PamResult<Option<Cow<'a, str>>> {
+        match code {
+            PAM_SUCCESS if token.is_null() => Ok(None),
+            PAM_SUCCESS => {
+                let pass = unsafe { CStr::from_ptr(token as *const c_char).to_str() }
+                    .map_err(|_| PamResultCode::PAM_CONV_ERR)?;
                 Ok(if pass.trim().is_empty() {
                     None
                 } else {
-                    Some(pass)
+                    Some(pass.into())
                 })
             }
-            PAM_SUCCESS => Ok(None),
             e => Err(e),
         }
     }
