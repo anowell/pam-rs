@@ -4,29 +4,37 @@
 ///
 /// ## Examples:
 ///
-/// Here is full example of a PAM module that would authenticate and authorize everybody:
+/// Here is full example of a PAM module that would authenticate and authorize
+/// everybody:
 ///
 /// ```
 /// #[macro_use] extern crate pam;
 ///
-/// use pam::module::{PamHooks, PamHandle};
-/// use pam::constants::{PamResultCode, PamFlag};
 /// use std::ffi::CStr;
+///
+/// use pam::{
+///     constants::{PamFlag, PamResultCode},
+///     module::{PamHandle, PamHooks},
+/// };
 ///
 /// # fn main() {}
 /// struct MyPamModule;
 /// pam_hooks!(MyPamModule);
 ///
 /// impl PamHooks for MyPamModule {
-///    fn sm_authenticate(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-///        println!("Everybody is authenticated!");
-///        PamResultCode::PAM_SUCCESS
-///    }
+///     fn sm_authenticate(
+///         pamh: &mut PamHandle,
+///         args: Vec<&CStr>,
+///         flags: PamFlag,
+///     ) -> PamResultCode {
+///         println!("Everybody is authenticated!");
+///         PamResultCode::PAM_SUCCESS
+///     }
 ///
-///    fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
-///        println!("Everybody is authorized!");
-///        PamResultCode::PAM_SUCCESS
-///    }
+///     fn acct_mgmt(pamh: &mut PamHandle, args: Vec<&CStr>, flags: PamFlag) -> PamResultCode {
+///         println!("Everybody is authorized!");
+///         PamResultCode::PAM_SUCCESS
+///     }
 /// }
 /// ```
 #[macro_export]
@@ -34,12 +42,17 @@ macro_rules! pam_hooks {
     ($ident:ident) => {
         pub use self::pam_hooks_scope::*;
         mod pam_hooks_scope {
-            use std::ffi::CStr;
-            use std::os::raw::{c_char, c_int};
-            use $crate::constants::{PamFlag, PamResultCode};
-            use $crate::module::{PamHandle, PamHooks};
+            use core::{
+                ffi::{c_char, c_int, CStr},
+                slice::from_raw_parts,
+            };
 
-            fn extract_argv<'a>(argc: c_int, argv: *const *const c_char) -> Vec<&'a CStr> {
+            use $crate::{
+                constants::{PamFlag, PamResultCode},
+                module::{PamHandle, PamHooks},
+            };
+
+            fn extract_argv<'a>(argc: c_int, argv: *const *const c_char) -> $crate::Vec<&'a CStr> {
                 (0..argc)
                     .map(|o| unsafe { CStr::from_ptr(*argv.offset(o as isize) as *const c_char) })
                     .collect()
@@ -132,7 +145,7 @@ macro_rules! pam_try {
 
 #[cfg(test)]
 pub mod test {
-    use module::PamHooks;
+    use crate::module::PamHooks;
 
     struct Foo;
     impl PamHooks for Foo {}

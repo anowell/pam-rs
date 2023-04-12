@@ -1,21 +1,23 @@
-use libc::{c_char, c_int};
-use std::ffi::{CStr, CString};
-use std::ptr;
+use alloc::ffi::CString;
+use core::{ffi::CStr, ptr};
 
-use constants::PamResultCode;
-use constants::PamMessageStyle;
-use items::Item;
-use module::PamResult;
+use libc::{c_char, c_int};
+
+use crate::{
+    constants::{PamMessageStyle, PamResultCode},
+    items::Item,
+    module::PamResult,
+};
 
 #[repr(C)]
 struct PamMessage {
     msg_style: PamMessageStyle,
-    msg: *const c_char,
+    msg:       *const c_char,
 }
 
 #[repr(C)]
 struct PamResponse {
-    resp: *const c_char,
+    resp:         *const c_char,
     resp_retcode: libc::c_int, // Unused - always zero
 }
 
@@ -56,15 +58,20 @@ impl<'a> Conv<'a> {
     pub fn send(&self, style: PamMessageStyle, msg: &str) -> PamResult<Option<&CStr>> {
         let mut resp_ptr: *const PamResponse = ptr::null();
         let msg_cstr = CString::new(msg).unwrap();
-        let msg = PamMessage {
-            msg_style: style,
-            msg: msg_cstr.as_ptr(),
-        };
 
-        let ret = (self.0.conv)(1, &&msg, &mut resp_ptr, self.0.appdata_ptr);
+        let ret = (self.0.conv)(
+            1,
+            &&PamMessage {
+                msg_style: style,
+                msg:       msg_cstr.as_ptr(),
+            },
+            &mut resp_ptr,
+            self.0.appdata_ptr,
+        );
 
         if PamResultCode::PAM_SUCCESS == ret {
-            // PamResponse.resp is null for styles that don't return user input like PAM_TEXT_INFO
+            // PamResponse.resp is null for styles that don't return user input like
+            // PAM_TEXT_INFO
             let response = unsafe { (*resp_ptr).resp };
             if response.is_null() {
                 Ok(None)

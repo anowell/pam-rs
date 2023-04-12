@@ -13,3 +13,5 @@ Cargo.lock
 
 # Override top-level .gitignore in Misc repo
 !src/tozny
+
+output/

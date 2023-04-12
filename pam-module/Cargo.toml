@@ -1,6 +1,6 @@
 [package]
 
-name = "pam-bindings"
+name = "pam-module"
 description = "PAM bindings for Rust"
 version = "0.1.1"
 authors = [ "Anthony Nowell <anowell@gmail.com>" ]
@@ -8,9 +8,15 @@ repository = "https://github.com/anowell/pam-rs"
 readme = "../README.md"
 keywords = ["pam", "ffi", "linux", "authentication"]
 license = "MIT"
+edition = "2021"
 
 [lib]
 name = "pam"
 
 [dependencies]
-libc = "0.2.97"
+libc = "0.2.137"
+strum = { version = "0.24", features = ["derive"] }
+
+[features]
+default = ["std"]
+std = []
