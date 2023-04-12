@@ -42,14 +42,17 @@ macro_rules! pam_hooks {
     ($ident:ident) => {
         pub use self::pam_hooks_scope::*;
         mod pam_hooks_scope {
-            use core::ffi::{c_char, c_int, CStr};
+            use core::{
+                ffi::{c_char, c_int, CStr},
+                slice::from_raw_parts,
+            };
 
             use $crate::{
                 constants::{PamFlag, PamResultCode},
                 module::{PamHandle, PamHooks},
             };
 
-            fn extract_argv<'a>(argc: c_int, argv: *const *const c_char) -> Vec<&'a CStr> {
+            fn extract_argv<'a>(argc: c_int, argv: *const *const c_char) -> $crate::Vec<&'a CStr> {
                 (0..argc)
                     .map(|o| unsafe { CStr::from_ptr(*argv.offset(o as isize) as *const c_char) })
                     .collect()

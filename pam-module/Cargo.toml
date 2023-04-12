@@ -16,3 +16,7 @@ name = "pam"
 [dependencies]
 libc = "0.2.137"
 strum = { version = "0.24", features = ["derive"] }
+
+[features]
+default = ["std"]
+std = []
