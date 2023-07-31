@@ -2,8 +2,8 @@ use libc::{c_char, c_int};
 use std::ffi::{CStr, CString};
 use std::ptr;
 
-use constants::PamResultCode;
 use constants::PamMessageStyle;
+use constants::PamResultCode;
 use items::Item;
 use module::PamResult;
 
