@@ -4,10 +4,10 @@ extern crate rand;
 use pam::constants::{PamFlag, PamResultCode, PAM_PROMPT_ECHO_ON};
 use pam::conv::Conv;
 use pam::module::{PamHandle, PamHooks};
+use pam::pam_try;
 use rand::Rng;
 use std::ffi::CStr;
 use std::str::FromStr;
-use pam::pam_try;
 
 struct PamSober;
 pam::pam_hooks!(PamSober);
